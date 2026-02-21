@@ -1,0 +1,412 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>JJ CHAT</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@100;200;300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Performance: Faster transition for snappier feel (0.2s) */
+      --aurora-transition: all 0.2s ease-in-out;
+      /* Apple-like easing for premium feel */
+      --ease-apple: cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* Performance Optimizations */
+    .gpu-accelerated {
+      will-change: transform, opacity;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      perspective: 1000px;
+    }
+
+    /* OPTIMIZATION: Isolate the message list layout calculations */
+    div[role="log"] {
+        contain: content;
+    }
+
+    /* STRICT LAYOUT CONTROL TO PREVENT SCROLL BARS FROM MERMAID ERRORS */
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden; /* Critical: Prevents layout shift/double scrollbars */
+      margin: 0;
+      padding: 0;
+      position: fixed; /* Locks the viewport */
+    }
+
+    body {
+      transition: background-color var(--aurora-transition), color var(--aurora-transition);
+      text-rendering: optimizeSpeed; /* Prioritize speed over geometric precision */
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+    }
+
+    /* Original Dark Mode (Deep Space/Aurora) - Dimmed for Eye Comfort */
+    body.theme-dark {
+      --aurora-bg: #010103;
+      /* Optimization: Darker surface with higher opacity to reduce glare */
+      --aurora-surface: rgba(18, 18, 28, 0.85);
+      --aurora-surface-hover: rgba(30, 30, 45, 0.7);
+      /* Subtle border for separation without harsh lines */
+      --aurora-border: rgba(255, 255, 255, 0.06);
+      --aurora-glow: #5a62f5;
+      --aurora-text-primary: #E9E9EB;
+      --aurora-text-secondary: #A3A3A8;
+      --aurora-accent-primary: #5a62f5;
+      --aurora-accent-hover: #787FF6;
+      --aurora-accent-secondary: #9c33f5;
+      --aurora-accent-danger: #f53333;
+      --aurora-code-bg: #0d0d0d;
+      --aurora-markdown-red: #ff6b6b;
+      --aurora-markdown-blue: #60a5fa;
+      
+      /* Contextual Text Colors */
+      --aurora-text-on-accent: #FFFFFF;
+      --aurora-text-on-surface: #E9E9EB;
+
+      /* UI Component Specifics */
+      --aurora-input-bg: rgba(10, 10, 15, 0.95);
+      --aurora-input-radius: 1rem; /* rounded-2xl */
+      --aurora-msg-user-bg: var(--aurora-accent-primary);
+      --aurora-msg-ai-bg: var(--aurora-surface);
+    }
+
+    /* Evening Charcoal Mode (Replaces Light Mode) */
+    body.theme-light {
+      --aurora-bg: #212121; /* Charcoal Grey (Main Body) */
+      --aurora-surface: rgba(45, 45, 45, 0.95); /* Lighter Charcoal for Panel Contrast */
+      --aurora-surface-hover: #383838;
+      --aurora-border: #484848; /* Lighter border for definition */
+      --aurora-glow: #555555; /* Subtle glow */
+      
+      --aurora-text-primary: #ECECEC; /* Off-white */
+      --aurora-text-secondary: #B4B4B4; /* Medium Grey */
+      
+      --aurora-accent-primary: #383838; /* Elements like buttons/inputs in main area */
+      --aurora-accent-hover: #484848;
+      --aurora-accent-secondary: #9c33f5;
+      --aurora-accent-danger: #ef4444;
+      
+      --aurora-code-bg: #111111;
+      --aurora-markdown-red: #fca5a5;
+      --aurora-markdown-blue: #93c5fd;
+
+      /* Contextual Text Colors */
+      --aurora-text-on-accent: #ECECEC;
+      --aurora-text-on-surface: #ECECEC;
+
+      /* UI Component Specifics */
+      --aurora-input-bg: rgba(47, 47, 47, 0.95); /* Semi-transparent Charcoal */
+      --aurora-input-radius: 1.5rem; /* Back to Island/Rounded-2xl Shape */
+      --aurora-msg-user-bg: transparent;
+      --aurora-msg-ai-bg: #2F2F2F; 
+    }
+
+    @keyframes aurora-background-pan {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    body.theme-dark {
+      background-color: var(--aurora-bg);
+      color: var(--aurora-text-primary);
+      /* Optimization: Significantly reduced opacity for background glows (0.08 & 0.06) */
+      background-image:
+        radial-gradient(ellipse at top, rgba(90, 98, 245, 0.08), transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(156, 51, 245, 0.06), transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 200% 200%;
+      /* Optimization: Slower animation (20s) to reduce GPU paint frequency */
+      animation: aurora-background-pan 20s ease-in-out infinite;
+    }
+    
+    body.theme-light {
+      background-color: var(--aurora-bg);
+      color: var(--aurora-text-primary);
+      background-image: none; /* Matte finish */
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    body.theme-dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+    body.theme-dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+    /* Evening Scrollbar */
+    body.theme-light ::-webkit-scrollbar-thumb { background: #4E4E4E; border-radius: 3px; }
+    body.theme-light ::-webkit-scrollbar-thumb:hover { background: #666666; }
+
+    html { scrollbar-width: thin; /* For Firefox */ }
+    body.theme-dark { scrollbar-color: rgba(255, 255, 255, 0.2) transparent; }
+    body.theme-light { scrollbar-color: #4E4E4E transparent; }
+
+    /* Aurora Component Styles */
+    .aurora-surface {
+      background-color: var(--aurora-surface);
+      border: 1px solid var(--aurora-border);
+      /* Optimization: Reduced blur radius (10px) for performance */
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: background-color var(--aurora-transition), border var(--aurora-transition);
+    }
+    
+    .aurora-panel {
+        background-color: var(--aurora-surface);
+        border: 1px solid var(--aurora-border);
+        /* Optimization: Reduced blur radius (8px) for performance */
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        transition: background-color var(--aurora-transition), border var(--aurora-transition), color var(--aurora-transition);
+        color: var(--aurora-text-primary);
+        /* Optimization: Hint to browser to promote to layer */
+        will-change: transform, opacity;
+    }
+    body.theme-dark .aurora-panel {
+        background-color: rgba(18, 18, 28, 0.9); /* Slightly more opaque panel background */
+    }
+    body.theme-light .aurora-panel {
+        background-color: var(--aurora-surface); 
+        border-color: var(--aurora-border);
+    }
+    
+    input.aurora-input, textarea.aurora-textarea, select.aurora-select {
+        background-color: rgba(0,0,0,0.3);
+        border: 1px solid var(--aurora-border);
+        color: var(--aurora-text-primary);
+        border-radius: 0.375rem;
+        transition: all 0.2s ease-in-out;
+    }
+    body.theme-light input.aurora-input, 
+    body.theme-light textarea.aurora-textarea, 
+    body.theme-light select.aurora-select {
+        background-color: #2F2F2F;
+        border-color: transparent;
+        color: var(--aurora-text-primary);
+    }
+    
+    body.theme-light ::placeholder {
+      color: var(--aurora-text-secondary);
+      opacity: 0.7;
+    }
+     input.aurora-input:focus, textarea.aurora-textarea:focus, select.aurora-select:focus {
+        outline: none;
+        border-color: var(--aurora-accent-primary);
+        box-shadow: 0 0 0 2px var(--aurora-border);
+    }
+
+    /* Markdown specific styles */
+    .markdown-content strong { font-weight: 600; color: var(--aurora-markdown-blue); }
+    .markdown-content em { font-style: italic; color: #4ade80; }
+    body.theme-light .markdown-content em { color: #16a34a; }
+    
+    /* Modified Link Styles for Explicit Blue */
+    .markdown-content a { color: #3b82f6; text-decoration: underline; border-bottom: none; }
+    .markdown-content a:hover { color: #60a5fa; text-decoration: underline; border-bottom: none; }
+
+    /* Highlight Quoted Text */
+    .quoted-text {
+      color: #fbbf24; /* Amber-400 */
+    }
+    body.theme-light .quoted-text {
+      color: #d97706; /* Amber-600 */
+    }
+
+    /* Fix inline code wrapping */
+    .markdown-content code {
+      word-break: break-word;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+
+      /* This rule now includes 'div' to fix the newline rendering issue. */
+      .markdown-content p, .markdown-content li > p, .markdown-content div {
+          margin-bottom: 0.5em; margin-top: 0.5em; overflow-wrap: break-word; word-break: normal; white-space: pre-line;
+      }
+    .markdown-content blockquote {
+      border-left: 2px solid var(--aurora-accent-secondary);
+      padding-left: 1em; margin-left: 0; color: var(--aurora-text-secondary); font-style: italic;
+    }
+   /* This rule adds list-style properties to fix numbered and bulleted lists. */
+    .markdown-content ul, .markdown-content ol {
+        padding-left: 1.5em; margin-top: 0.5em; margin-bottom: 0.5em; list-style-position: outside;
+    }
+    .markdown-content ul { list-style-type: disc; }
+    .markdown-content ol { list-style-type: decimal; }
+    .markdown-content li { margin-bottom: 0.25em; }
+    .markdown-content table {
+        width: auto; border-collapse: collapse; margin-top: 1em; margin-bottom: 1em; border: 1px solid var(--aurora-border);
+    }
+    .markdown-content th, .markdown-content td {
+        border: 1px solid var(--aurora-border); padding: 0.5em 0.75em; text-align: left;
+    }
+    .markdown-content th { background-color: var(--aurora-surface); font-weight: 600; }
+    .markdown-content hr { border-top: 1px solid var(--aurora-border); margin: 1em 0; }
+    .markdown-content h1, .markdown-content h2, .markdown-content h3 {
+        font-weight: 600; margin-top: 1em; margin-bottom: 0.5em; border-bottom: 1px solid var(--aurora-border); padding-bottom: 0.3em;
+    }
+    .markdown-content h1 { font-size: 1.5em; }
+    .markdown-content h2 { font-size: 1.25em; }
+    .markdown-content h3 { font-size: 1.1em; color: var(--aurora-markdown-red); }
+    
+    .highlighted-text {
+      background-color: rgba(253, 224, 71, 0.3);
+      color: #fde047;
+      padding: 0.05em 0.15em;
+      border-radius: 0.2em;
+    }
+    body.theme-light .highlighted-text {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom range slider */
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+      width: 100%;
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 4px;
+      background: var(--aurora-surface);
+      border-radius: 2px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: var(--aurora-accent-primary);
+      margin-top: -6px;
+      transition: transform 0.2s ease;
+    }
+    input[type=range]:focus::-webkit-slider-thumb {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--aurora-accent-primary) 50%, transparent);
+    }
+    input[type=range]:active::-webkit-slider-thumb {
+      transform: scale(1.2);
+    }
+    
+    .animate-thinking-dots > div {
+        animation: 생각_점_깜빡임 1.4s infinite ease-in-out;
+    }
+    .animate-thinking-dots > div:nth-child(1) {
+        animation-delay: -0.32s;
+    }
+    .animate-thinking-dots > div:nth-child(2) {
+        animation-delay: -0.16s;
+    }
+
+    @keyframes 생각_점_깜빡임 {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.9); }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spin-slow 3s linear infinite;
+    }
+    
+    /* Fix for message options menu overlap in virtualized list */
+    .virtual-item-container:has(.message-item-root.menu-open) {
+        z-index: 20 !important; /* Elevate the entire container when its child menu is open */
+    }
+
+    /* Disable interactions on fieldsets during the tap-through prevention delay */
+    fieldset:disabled {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    /* --- GPU Animations & Micro-Interactions --- */
+    @keyframes modalZoom {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Class used in BaseModal.tsx */
+    .animate-modal-open {
+      animation: modalZoom 0.4s var(--ease-apple) forwards;
+    }
+
+    /* Class used in MessageItem.tsx */
+    .animate-message-enter {
+      animation: slideUpFade 0.4s var(--ease-apple) forwards;
+    }
+
+    /* Global Button Press Effect - Tactile feedback */
+    button:active {
+      transform: scale(0.96);
+      transition: transform 0.1s ease-out;
+    }
+  </style>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
+<link rel="stylesheet" href="/index.css">
+<script type="importmap">
+{
+  "imports": {
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "tone": "https://esm.sh/tone@^15.1.22",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "jszip": "https://esm.sh/jszip@^3.10.1",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "zustand/": "https://esm.sh/zustand@^5.0.9/",
+    "zustand": "https://esm.sh/zustand@^5.0.9",
+    "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
+    "mermaid": "https://esm.sh/mermaid@^11.12.2",
+    "url": "https://esm.sh/url@^0.11.4",
+    "react-syntax-highlighter/": "https://esm.sh/react-syntax-highlighter@^16.1.0/",
+    "react-syntax-highlighter": "https://esm.sh/react-syntax-highlighter@^16.1.0",
+    "vite-plugin-pwa": "https://esm.sh/vite-plugin-pwa@^1.2.0",
+    "rehype-raw": "https://esm.sh/rehype-raw@^7.0.0",
+    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
+    "marked": "https://esm.sh/marked@^17.0.1",
+    "mark.js/": "https://esm.sh/mark.js@^8.11.1/",
+    "react-zoom-pan-pinch": "https://esm.sh/react-zoom-pan-pinch@^3.7.0",
+    "@tanstack/react-virtual": "https://esm.sh/@tanstack/react-virtual@^3.13.16"
+  }
+}
+</script>
+</head>
+<body class="bg-transparent">
+  <div id="root"></div>
+  <!-- Initialize Mermaid manually to prevent auto-rendering errors on load -->
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: false });
+    window.mermaid = mermaid;
+  </script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Copy of 79 tools 4.39 JJChat ",
+  "description": "local sitting \n",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "prompt": ""
+}
